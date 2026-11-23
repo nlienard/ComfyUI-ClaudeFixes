@@ -62,6 +62,15 @@ run deleted the running chain ("H3 Disk Cache manifest not found"); with CONTINU
 - `web/h3_continue_reset_block.js` (frontend): reset / invalidate calls are blocked while the wired CONTINUE source
   is muted or bypassed. An active CONTINUE keeps the Extender's normal behaviour.
 
+## h3_unique_extender.js — similar workflows open side by side get separate caches
+
+The Extender cache is keyed on its node id. Two open workflows whose Extenders share an id (the same workflow opened
+twice, two copies of a preset) share one cache and break each other's runs. When a workflow is opened (file, drag &
+drop, new tab, F5 restore) and its Extender id is already claimed by another workflow opened in this browser session,
+the Extender is renumbered to a random free id (70000-89999) before the graph is built: own cache, clips sent
+unvalidated (the new cache is empty). Switching tabs never renumbers (a session stamp in `extra`), so the cache and
+validated clips of each tab are kept. Pure helpers in `web/lib_h3_ids.js`.
+
 ## tab_state_fix.js — rgthree toggles survive a workflow tab switch
 
 rgthree panels (Fast Groups Muter / Bypasser) set `node.mode` directly. The ComfyUI ChangeTracker captures the graph
