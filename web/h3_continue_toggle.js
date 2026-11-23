@@ -45,6 +45,18 @@ async function autoNewProject(node, entry) {
         anyValidated = lists.some((l) => l.some((c) => c?.validated));
     }
     if (prev !== null || !anyValidated) {   // no record yet + validated clips: keep them (just record the key)
+        // NEVER reset while ComfyUI runs or holds jobs: the running Extender would lose its cache file mid-run
+        // (FileNotFoundError chain_extender_<id>.h3cache, 2026-11-23). Key not recorded -> reset at the next idle queue.
+        try {
+            const q = await (await fetch(api.apiURL("/queue"))).json();
+            if ((q?.queue_running?.length || 0) + (q?.queue_pending?.length || 0) > 0) {
+                console.warn(`[ClaudeFixes] Extender #${node.id}: inputs changed but ComfyUI is busy -> cache reset postponed to the next queue when idle`);
+                return;
+            }
+        } catch (e) {
+            console.warn("[ClaudeFixes] queue check failed -> no cache reset", e);
+            return;
+        }
         try {
             const r = await fetch(api.apiURL("/h3_extender/continue_video/reset_cache"), {
                 method: "POST", headers: { "Content-Type": "application/json" },

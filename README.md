@@ -43,7 +43,7 @@ whose Extender has the same id shared the same cache too. At queue time the fix 
 files of the active Load* nodes (+ BODY n settings). When the key changes, that Extender's generated chain is reset
 (`/h3_extender/continue_video/reset_cache`, this owner only; the built-in New Project wipes every Extender) and all
 clips are sent unvalidated. Same key: cache kept, so clip_by_clip validations survive and editing the next scene
-prompt resets nothing. Console: `[ClaudeFixes] Extender #<id>: new workflow or new input files -> its cache reset`.
+prompt resets nothing. The reset is skipped while ComfyUI runs or holds queued jobs (it would delete the cache of the running Extender) and happens at the next queue made when idle. Console: `[ClaudeFixes] Extender #<id>: new workflow or new input files -> its cache reset`.
 
 ## Install
 
