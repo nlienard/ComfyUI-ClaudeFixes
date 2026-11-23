@@ -15,8 +15,21 @@ app.registerExtension({
             const res = await orig.apply(this, args);
             try {
                 const out = res?.output || {};
+                // Global SCENE DURATION: a primitive node with properties.claude_role = "h3_scene_duration".
+                // Value > 0 overrides the duration of every clip card at queue time (0 = keep the cards).
+                const durNode = (app.graph?._nodes || []).find((n) => n?.properties?.claude_role === "h3_scene_duration");
+                const durVal = durNode && durNode.mode === 0 ? Number(durNode.widgets?.[0]?.value) : 0;
                 for (const node of app.graph?._nodes || []) {
                     if (node?.type !== "MiniMaxH3Extender") continue;
+                    const e0 = out[String(node.id)];
+                    if (durVal > 0 && typeof e0?.inputs?.clips_json === "string") {
+                        const cj = JSON.parse(e0.inputs.clips_json);
+                        const d = Math.max(0.25, Math.min(150, durVal));
+                        const lists = [cj.clips, ...Object.values(cj.mode_clips || {})].filter(Array.isArray);
+                        for (const list of lists) for (const c of list) if (c && typeof c === "object") c.duration = d;
+                        e0.inputs.clips_json = JSON.stringify(cj);
+                        console.info(`[ClaudeFixes] Extender #${node.id}: every scene = ${d} s (SCENE DURATION node)`);
+                    }
                     // Refs: the Extender never clears a stored Ref N when its Reference Pack slot is empty, so a
                     // muted photo (PERSON n / BODY n / DECOR) kept being sent. With a pack wired, the pack is the
                     // only source: send empty stored refs, the backend re-imports the active slots (same pixel

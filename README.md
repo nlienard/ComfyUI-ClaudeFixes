@@ -28,6 +28,13 @@ to H3 as `<Picture n>`. When a `ref_pack` is wired and active, the fix sends the
 the backend re-imports only the active slots. Ref ids are pixel hashes, so validated clip caches stay valid.
 Console: `[ClaudeFixes] Extender #<id>: stored refs cleared, Reference Pack only`.
 
+## Same file — global SCENE DURATION node
+
+The Extender has no duration input: each clip card stores its own duration in `clips_json`. Add a `PrimitiveFloat`
+with `properties.claude_role = "h3_scene_duration"` (it does not need to be wired). When its value is > 0 and the node
+is not muted, every clip card is sent with that duration at queue time (clamped 0.25-150 s). 0 = keep the cards.
+Handy for quick 2 s identity tests. Console: `[ClaudeFixes] Extender #<id>: every scene = <d> s`.
+
 ## Install
 
 ```
