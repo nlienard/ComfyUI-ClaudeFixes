@@ -51,6 +51,13 @@ Runs execute one after another, so several runs with different photos can be que
 cache when it starts, never during another run. The first time an Extender is seen with validated clips, its cache
 is kept and only the fingerprint is recorded. Log: `ClaudeFixes h3_cache_guard: Extender <id> inputs changed ... -> its cache cleared`.
 
+## tab_state_fix.js — rgthree toggles survive a workflow tab switch
+
+rgthree panels (Fast Groups Muter / Bypasser) set `node.mode` directly. The ComfyUI ChangeTracker captures the graph
+on a window `mouseup`, which canvas pointer handling does not always produce, so it kept the state from before the
+toggles and restored it when coming back to the tab (PERSON 2 OFF came back ON). The fix also captures the canvas
+state after every `pointerup`.
+
 ## Install
 
 ```
