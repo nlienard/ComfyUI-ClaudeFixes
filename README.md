@@ -71,11 +71,12 @@ the Extender is renumbered to a random free id (70000-89999) before the graph is
 unvalidated (the new cache is empty). Switching tabs never renumbers (a session stamp in `extra`), so the cache and
 validated clips of each tab are kept. Pure helpers in `web/lib_h3_ids.js`.
 
-## h3_validated_in_header.js — Validated checkbox in the clip card header
+## h3_validated_in_header.js — Validated in the card header, LoRA + Seed above the prompt
 
 The Extender puts the `Validated` checkbox at the bottom of each clip card, where the preview player or a small node
-hides it. The same element (listeners kept) is moved into the card header, next to `CLIP n ... CANDIDATE`; a
-MutationObserver re-applies it after each Extender re-render.
+hides it, like the LoRA selectors and the Seed / Duration row. The same elements (listeners kept) are moved:
+`Validated` into the card header next to `CLIP n ... CANDIDATE`, LoRA + Seed/Duration just above the prompt. A
+MutationObserver re-applies the moves after each Extender re-render.
 
 ## tab_state_fix.js — rgthree toggles survive a workflow tab switch
 
