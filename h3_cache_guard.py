@@ -20,6 +20,7 @@ _LOG = logging.getLogger("ClaudeFixes")
 _STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "h3_cache_guard_state.json")
 _LOCK = threading.Lock()
 _PATCHED = False
+_RUNNING = set()   # Extender owners currently executing
 
 
 def _tensor_digest(h, t):
@@ -121,6 +122,18 @@ def patch():
         return True
     original = getattr(cls, cls.FUNCTION)
 
+    # The Extender UI calls /h3_extender/continue_video/reset_cache (-> _clear_continue_mode_caches) when it (re)loads
+    # the graph and inspects the wired CONTINUE LoadVideo, even a muted one, and even while that Extender is running
+    # (workflow opened in a new tab during a run -> "manifest not found", run lost). Both routes look the function up
+    # in the module at call time, so replacing it here blocks any clear of an owner that is executing.
+    def guarded_clear(owner_id, *a, **k):
+        if str(owner_id) in _RUNNING:
+            _LOG.warning("ClaudeFixes h3_cache_guard: refused to clear the cache of Extender %s while it is running", owner_id)
+            return False
+        return clear(owner_id, *a, **k)
+
+    setattr(mod, "_clear_continue_mode_caches", guarded_clear)
+
     def extend(self, *args, **kwargs):
         try:
             owner = str(kwargs.get("unique_id") if kwargs.get("unique_id") is not None else "h3_extender")
@@ -140,7 +153,12 @@ def patch():
                     _save_state(state)
         except Exception as exc:
             _LOG.warning("ClaudeFixes h3_cache_guard: skipped (%s)", exc)
-        return original(self, *args, **kwargs)
+            owner = str(kwargs.get("unique_id") if kwargs.get("unique_id") is not None else "h3_extender")
+        _RUNNING.add(owner)
+        try:
+            return original(self, *args, **kwargs)
+        finally:
+            _RUNNING.discard(owner)
 
     extend.__wrapped__ = original
     setattr(cls, cls.FUNCTION, extend)

@@ -51,6 +51,17 @@ Runs execute one after another, so several runs with different photos can be que
 cache when it starts, never during another run. The first time an Extender is seen with validated clips, its cache
 is kept and only the fingerprint is recorded. Log: `ClaudeFixes h3_cache_guard: Extender <id> inputs changed ... -> its cache cleared`.
 
+## Extender cache never wiped during a run or by a muted CONTINUE
+
+The Extender UI inspects the LoadVideo wired to `continue_existing_video` each time the graph is (re)loaded (new
+tab, tab switch, F5) and calls `/h3_extender/continue_video/reset_cache` when it differs from its stored Clip 0, even
+when that LoadVideo is muted, and even while the same Extender is running. Opening the workflow in a new tab during a
+run deleted the running chain ("H3 Disk Cache manifest not found"); with CONTINUE OFF, validated clips were wiped.
+
+- `h3_cache_guard.py` (backend): `_clear_continue_mode_caches` refuses to clear an Extender that is executing.
+- `web/h3_continue_reset_block.js` (frontend): reset / invalidate calls are blocked while the wired CONTINUE source
+  is muted or bypassed. An active CONTINUE keeps the Extender's normal behaviour.
+
 ## tab_state_fix.js — rgthree toggles survive a workflow tab switch
 
 rgthree panels (Fast Groups Muter / Bypasser) set `node.mode` directly. The ComfyUI ChangeTracker captures the graph
