@@ -35,6 +35,16 @@ with `properties.claude_role = "h3_scene_duration"` (it does not need to be wire
 is not muted, every clip card is sent with that duration at queue time (clamped 0.25-150 s). 0 = keep the cards.
 Handy for quick 2 s identity tests. Console: `[ClaudeFixes] Extender #<id>: every scene = <d> s`.
 
+## Same file — automatic per-Extender "new project"
+
+The Extender keys its disk cache on its node id only. Run the same workflow again with another face photo, BODY
+image or voice and it re-used the clips cached from the first run (the old face came back). Running another workflow
+whose Extender has the same id shared the same cache too. At queue time the fix computes a key = workflow path +
+files of the active Load* nodes (+ BODY n settings). When the key changes, that Extender's generated chain is reset
+(`/h3_extender/continue_video/reset_cache`, this owner only; the built-in New Project wipes every Extender) and all
+clips are sent unvalidated. Same key: cache kept, so clip_by_clip validations survive and editing the next scene
+prompt resets nothing. Console: `[ClaudeFixes] Extender #<id>: new workflow or new input files -> its cache reset`.
+
 ## Install
 
 ```
