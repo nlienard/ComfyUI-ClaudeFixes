@@ -17,6 +17,19 @@ app.registerExtension({
                 const out = res?.output || {};
                 for (const node of app.graph?._nodes || []) {
                     if (node?.type !== "MiniMaxH3Extender") continue;
+                    // Refs: the Extender never clears a stored Ref N when its Reference Pack slot is empty, so a
+                    // muted photo (PERSON n / BODY n / DECOR) kept being sent. With a pack wired, the pack is the
+                    // only source: send empty stored refs, the backend re-imports the active slots (same pixel
+                    // hash -> same ref id -> clip caches stay valid).
+                    const ent = out[String(node.id)];
+                    if (ent?.inputs && "ref_pack" in ent.inputs && typeof ent.inputs.refs_json === "string") {
+                        const rj = JSON.parse(ent.inputs.refs_json);
+                        if (Array.isArray(rj.refs) && rj.refs.some((r) => r)) {
+                            rj.refs = [];
+                            ent.inputs.refs_json = JSON.stringify(rj);
+                            console.info(`[ClaudeFixes] Extender #${node.id}: stored refs cleared, Reference Pack only`);
+                        }
+                    }
                     const inp = (node.inputs || []).find((i) => i?.name === "continue_existing_video");
                     if (!inp || inp.link == null) continue;            // unplugged: the Extender clears it itself
                     const entry = out[String(node.id)];
