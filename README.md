@@ -20,6 +20,14 @@ socket is **wired** but missing from the API prompt (upstream muted or bypassed)
 
 The browser console logs `[ClaudeFixes] Extender #<id>: CONTINUE muted -> stored Clip 0 ignored` when the fix acts.
 
+## Same file — muted reference photos are really removed
+
+The Extender never clears a stored `Ref N` when the matching Reference Pack slot is empty ("empty external slots
+are deliberately no-ops"). A photo that was ON once (PERSON n, BODY n, DECOR...) and is then muted keeps being sent
+to H3 as `<Picture n>`. When a `ref_pack` is wired and active, the fix sends the stored refs empty at queue time:
+the backend re-imports only the active slots. Ref ids are pixel hashes, so validated clip caches stay valid.
+Console: `[ClaudeFixes] Extender #<id>: stored refs cleared, Reference Pack only`.
+
 ## Install
 
 ```
