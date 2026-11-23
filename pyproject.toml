@@ -1,0 +1,8 @@
+[project]
+name = "comfyui-claudefixes"
+description = "Frontend-only fixes for ComfyUI custom nodes. Makes muting the 'continue_existing_video' input of MiniMax H3 Extender really turn the extend off."
+version = "1.0.0"
+license = { file = "LICENSE" }
+
+[tool.comfy]
+DisplayName = "Claude Fixes"
