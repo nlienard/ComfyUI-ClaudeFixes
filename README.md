@@ -1,6 +1,6 @@
 # ComfyUI-ClaudeFixes
 
-Frontend-only fixes for ComfyUI custom nodes. The pack adds no nodes, only browser extensions (`web/*.js`).
+Fixes for other ComfyUI custom nodes. The pack adds no nodes: browser extensions (`web/*.js`) and one backend patch (`h3_cache_guard.py`).
 
 ## h3_continue_toggle.js — MiniMax H3 Extender: muting CONTINUE really stops the extend
 
@@ -35,15 +35,21 @@ with `properties.claude_role = "h3_scene_duration"` (it does not need to be wire
 is not muted, every clip card is sent with that duration at queue time (clamped 0.25-150 s). 0 = keep the cards.
 Handy for quick 2 s identity tests. Console: `[ClaudeFixes] Extender #<id>: every scene = <d> s`.
 
-## Same file — automatic per-Extender "new project"
+## h3_cache_guard.py — backend: new photo / voice / video = fresh Extender cache
 
 The Extender keys its disk cache on its node id only. Run the same workflow again with another face photo, BODY
-image or voice and it re-used the clips cached from the first run (the old face came back). Running another workflow
-whose Extender has the same id shared the same cache too. At queue time the fix computes a key = workflow path +
-files of the active Load* nodes (+ BODY n settings). When the key changes, that Extender's generated chain is reset
-(`/h3_extender/continue_video/reset_cache`, this owner only; the built-in New Project wipes every Extender) and all
-clips are sent unvalidated. Same key: cache kept, so clip_by_clip validations survive and editing the next scene
-prompt resets nothing. The reset is skipped while ComfyUI runs or holds queued jobs (it would delete the cache of the running Extender) and happens at the next queue made when idle. Console: `[ClaudeFixes] Extender #<id>: new workflow or new input files -> its cache reset`.
+image or voice and it re-used the clips cached by the first run (the old face came back).
+
+`h3_cache_guard.py` wraps `MiniMaxH3Extender.extend`. Right before the Extender runs, it fingerprints the inputs it
+really received: the Reference Pack image tensors, `ref_audio_1..4` waveforms and `continue_existing_video`. If the
+fingerprint differs from the previous run of the same Extender (state in `h3_cache_guard_state.json`), that
+Extender's generated chain is cleared (`_clear_continue_mode_caches`, this owner only; the built-in New Project wipes
+every Extender) and every clip is sent unvalidated. Same inputs: cache kept, so clip_by_clip validations survive and
+editing a scene prompt resets nothing.
+
+Runs execute one after another, so several runs with different photos can be queued in a row: each one resets the
+cache when it starts, never during another run. The first time an Extender is seen with validated clips, its cache
+is kept and only the fingerprint is recorded. Log: `ClaudeFixes h3_cache_guard: Extender <id> inputs changed ... -> its cache cleared`.
 
 ## Install
 
@@ -52,4 +58,4 @@ cd ComfyUI/custom_nodes
 git clone https://github.com/nlienard/ComfyUI-ClaudeFixes.git
 ```
 
-Restart ComfyUI once. Later updates of the JS only need a browser refresh.
+Restart ComfyUI after installing or updating (the backend patch is Python). JS-only changes need a browser refresh.

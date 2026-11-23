@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-claudefixes"
-description = "Frontend-only fixes for ComfyUI custom nodes. Makes muting the 'continue_existing_video' input of MiniMax H3 Extender really turn the extend off."
-version = "1.0.0"
+description = "Fixes for other ComfyUI custom nodes (MiniMax H3 Extender: CONTINUE toggle, muted refs, global scene duration, cache reset when input photos/voices change)."
+version = "1.1.0"
 license = { file = "LICENSE" }
 
 [tool.comfy]
