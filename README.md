@@ -85,6 +85,16 @@ on a window `mouseup`, which canvas pointer handling does not always produce, so
 toggles and restored it when coming back to the tab (PERSON 2 OFF came back ON). The fix also captures the canvas
 state after every `pointerup`.
 
+## h3_locked_output.py — backend: autosave mp4 open in VLC no longer kills the run
+
+In `clip_by_clip` mode the Extender overwrites `output/<prefix>.mp4` after every clip. On Windows, if that file is open
+in VLC, a browser tab or the Explorer preview pane, the replace fails with `[WinError 5] Access denied` and the run ends
+in an exception (the clip was generated and cached, only the export failed).
+
+Fix: `_replace_output_from_preview` is wrapped; on `PermissionError` it retries for ~3 s, then writes
+`<prefix>_2.mp4` (up to `_9`) and logs `ClaudeFixes h3_locked_output: … is locked … -> saved as …`.
+Watch the previous result while the next clip renders without breaking anything. Needs a ComfyUI restart once.
+
 ## Install
 
 ```
