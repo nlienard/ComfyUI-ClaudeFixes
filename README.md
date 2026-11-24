@@ -85,15 +85,16 @@ on a window `mouseup`, which canvas pointer handling does not always produce, so
 toggles and restored it when coming back to the tab (PERSON 2 OFF came back ON). The fix also captures the canvas
 state after every `pointerup`.
 
-## h3_locked_output.py — backend: autosave mp4 open in VLC no longer kills the run
+## h3_autosave_names.py — backend: clip-by-clip autosave = one file per stage, no crash if open in VLC
 
-In `clip_by_clip` mode the Extender overwrites `output/<prefix>.mp4` after every clip. On Windows, if that file is open
-in VLC, a browser tab or the Explorer preview pane, the replace fails with `[WinError 5] Access denied` and the run ends
-in an exception (the clip was generated and cached, only the export failed).
+Stock `clip_by_clip` overwrites `output/<prefix>.mp4` after every clip: the previous stage is lost, and on Windows the
+replace fails with `[WinError 5] Access denied` when that mp4 is open in VLC / a browser tab / the Explorer preview pane,
+which ends the run in an exception (the clip was generated and cached, only the export failed).
 
-Fix: `_replace_output_from_preview` is wrapped; on `PermissionError` it retries for ~3 s, then writes
-`<prefix>_2.mp4` (up to `_9`) and logs `ClaudeFixes h3_locked_output: … is locked … -> saved as …`.
-Watch the previous result while the next clip renders without breaking anything. Needs a ComfyUI restart once.
+Fix: the autosave is written as `<prefix>_scene1.mp4`, then `<prefix>_scene1-2.mp4`, `<prefix>_scene1-3.mp4` … (number
+of clips in the current sequence; ref2va and FL2VA engines). Re-rendering the same stage replaces only that file; if it
+is locked, retry ~3 s then `<prefix>_scene1-3_2.mp4` (… `_9`). Watch the previous stage while the next clip renders.
+No workflow change needed. Needs a ComfyUI restart once.
 
 ## Install
 
