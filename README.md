@@ -104,3 +104,14 @@ git clone https://github.com/nlienard/ComfyUI-ClaudeFixes.git
 ```
 
 Restart ComfyUI after installing or updating (the backend patch is Python). JS-only changes need a browser refresh.
+
+## h3_voice_pack.py — node "H3 Voices 4 -> Extender (3 max)" + no voice leak
+
+The MiniMax H3 Extender has only 3 audio slots, and a clip whose prompt has no `<Audio n>` tag still receives the first
+connected voice (the person mumbles in scenes with no line).
+
+- Node **H3 Voices 4 -> Extender (3 max)**: `text` + `voice_1..voice_4` (4 loaders) + toggles `use_voice_1..4`.
+  More than 3 ON = error "3 voices MAX". The ON voices fill `audio_1..3` in order (voices 2 and 4 ON → `<Audio 1>` = voice 2,
+  `<Audio 2>` = voice 4). After every line `<Subject n> says ...: "..."` of a person whose voice is ON, the text gets
+  `The voice of <Subject n> is the voice of <Audio k> (timbre only ...)`.
+- Patch (only for audio coming from this node): a clip with no `<Audio n>` tag gets no voice at all.
