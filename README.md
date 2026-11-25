@@ -96,15 +96,6 @@ of clips in the current sequence; ref2va and FL2VA engines). Re-rendering the sa
 is locked, retry ~3 s then `<prefix>_scene1-3_2.mp4` (… `_9`). Watch the previous stage while the next clip renders.
 No workflow change needed. Needs a ComfyUI restart once.
 
-## bionic_profile_switch.js — Bionic: system prompt profile selector next to the model
-
-For [ComfyUI-Bionic](https://github.com/Verolelb/ComfyUI-Bionic). Adds a dropdown right of the model selector in the
-Bionic chat panel listing Bionic's named system prompts (saved in its settings, `user/bionic_chat/prompts.json`).
-Picking one makes it the active system prompt (`POST /bionic_chat/config`) and updates the settings textarea, so no
-trip to the settings panel is needed to switch between, e.g., an H3 video profile and an image profile.
-The list refreshes when the mouse enters it; a system prompt that matches no profile shows as "(custom system prompt)".
-Does nothing when Bionic is not installed. Frontend only: a browser refresh (F5) is enough.
-
 ## Install
 
 ```
