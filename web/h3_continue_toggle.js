@@ -22,13 +22,34 @@ app.registerExtension({
                 for (const node of app.graph?._nodes || []) {
                     if (node?.type !== "MiniMaxH3Extender") continue;
                     const e0 = out[String(node.id)];
-                    if (durVal > 0 && typeof e0?.inputs?.clips_json === "string") {
+                    if (typeof e0?.inputs?.clips_json === "string" && (durVal > 0 || "prompt_pack" in (e0.inputs || {}))) {
                         const cj = JSON.parse(e0.inputs.clips_json);
-                        const d = Math.max(0.25, Math.min(150, durVal));
-                        const lists = [cj.clips, ...Object.values(cj.mode_clips || {})].filter(Array.isArray);
-                        for (const list of lists) for (const c of list) if (c && typeof c === "object") c.duration = d;
+                        const d = durVal > 0 ? Math.max(0.25, Math.min(150, durVal)) : 0;
+                        // Prompt Pack wired: when the pack has more prompts than cards, the backend appends cards with
+                        // ITS defaults (10 s, random seed). Pad the card list with spare cards (SCENE DURATION, or the
+                        // last card's duration) up to PAD; the backend trims the list to the pack size, so the spares
+                        // are only used as new cards.
+                        const PAD = 12;
+                        if ("prompt_pack" in e0.inputs && Array.isArray(cj.clips) && cj.clips.length && cj.clips.length < PAD) {
+                            const last = cj.clips[cj.clips.length - 1] || {};
+                            const used = new Set(cj.clips.map((c) => String(c?.id)));
+                            for (let i = cj.clips.length; i < PAD; i++) {
+                                let id = `clip_${i + 1}`;
+                                while (used.has(id)) id = `clip_${i + 1}_${Math.random().toString(36).slice(2, 7)}`;
+                                used.add(id);
+                                cj.clips.push({ id, name: "", prompt: "", seed: Math.floor(Math.random() * 2 ** 31),
+                                    seed_mode: last.seed_mode || "randomize", duration: d || last.duration || 5,
+                                    validated: false, loras: [], local_refs: null, first_frame: null, last_frame: null,
+                                    guides: [], first_source: "manual" });
+                            }
+                        }
+                        // SCENE DURATION: NOT validated cards only (a validated clip keeps the duration it was made with).
+                        if (d > 0) {
+                            const lists = [cj.clips, ...Object.values(cj.mode_clips || {})].filter(Array.isArray);
+                            for (const list of lists) for (const c of list) if (c && typeof c === "object" && !c.validated) c.duration = d;
+                            console.info(`[ClaudeFixes] Extender #${node.id}: every NOT validated scene = ${d} s (SCENE DURATION node)`);
+                        }
                         e0.inputs.clips_json = JSON.stringify(cj);
-                        console.info(`[ClaudeFixes] Extender #${node.id}: every scene = ${d} s (SCENE DURATION node)`);
                     }
                     // Refs: the Extender never clears a stored Ref N when its Reference Pack slot is empty, so a
                     // muted photo (PERSON n / BODY n / DECOR) kept being sent. With a pack wired, the pack is the
