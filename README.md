@@ -118,3 +118,15 @@ connected voice (the person mumbles in scenes with no line).
 
 ## Bionic: unload the LLM at each Run (1.11.0)
 `web/bionic_unload_on_queue.js`: when a workflow containing an active Bionic node is queued, the Bionic LLM is unloaded (`POST /bionic_chat/unload`, same as its unload button), so a local 27B model no longer steals VRAM from the video model (H3: 107 s/step instead of ~50 s/step). Needs an LLM server that can unload (llama.cpp router mode `--models-preset`, LM Studio, Ollama).
+
+## h3_start_image.py — node "H3 Start Image (clip 1)": Ref2VA with a start frame (1.12.0)
+
+The Extender in Ref2VA mode uses photos for identity only; a card's `first_frame` is used in FL2VA mode only (and FL2VA
+has no identity photos). This node gives both.
+
+- Wire it between `MiniMax H3 Reference Pack Bridge` and the Extender's `ref_pack`, plus a Load Image on `image`.
+- `use_start_image` OFF (default): the pack goes through unchanged and the image is not loaded (lazy input).
+- ON: clip 1 gets the image as a keyframe at frame 0 (same as a native `MiniMaxH3AddGuide` image, frame_idx 0:
+  cover-crop to the canvas, VAE encode, one `minimax_keyframes` entry). The photos still give the faces.
+  Clips 2+ are unchanged (motion context). Ignored when CONTINUE (extend an existing video) is ON.
+- The cache guard fingerprints the start image: new image = clip 1 regenerated.

@@ -44,6 +44,10 @@ def _fingerprint(ref_pack, kwargs):
             h.update(b"-")
         else:
             _tensor_digest(h, img)
+    start = ref_pack.get("claude_start_image") if isinstance(ref_pack, dict) else None
+    if start is not None:   # H3 Start Image node (h3_start_image.py)
+        h.update(b"|start:")
+        _tensor_digest(h, start)
     for k in ("ref_audio_1", "ref_audio_2", "ref_audio_3", "ref_audio_4"):
         a = kwargs.get(k)
         h.update(f"|{k}:".encode())
