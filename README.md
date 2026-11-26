@@ -115,3 +115,6 @@ connected voice (the person mumbles in scenes with no line).
   `<Audio 2>` = voice 4). After every line `<Subject n> says ...: "..."` of a person whose voice is ON, the text gets
   `The voice of <Subject n> is the voice of <Audio k> (timbre only ...)`.
 - Patch (only for audio coming from this node): a clip with no `<Audio n>` tag gets no voice at all.
+
+## Bionic: unload the LLM at each Run (1.11.0)
+`web/bionic_unload_on_queue.js`: when a workflow containing an active Bionic node is queued, the Bionic LLM is unloaded (`POST /bionic_chat/unload`, same as its unload button), so a local 27B model no longer steals VRAM from the video model (H3: 107 s/step instead of ~50 s/step). Needs an LLM server that can unload (llama.cpp router mode `--models-preset`, LM Studio, Ollama).

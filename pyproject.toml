@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-claudefixes"
 description = "Fixes for other ComfyUI custom nodes (MiniMax H3 Extender: CONTINUE toggle, muted refs, global scene duration, cache reset when input photos/voices change)."
-version = "1.10.0"
+version = "1.11.0"
 license = { file = "LICENSE" }
 
 [tool.comfy]
