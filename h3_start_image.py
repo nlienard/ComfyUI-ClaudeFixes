@@ -77,15 +77,26 @@ def patch():
         _PATCHED = True
         return True
     import node_helpers
+    import os
+    norm = lambda x: os.path.normcase(os.path.abspath(x))
+    ext_file = norm(mod.__file__)
 
     def make_cond(clip, vae, prompt, width, height, frame_count, *a, **k):
         cond, latent = orig_cond(clip, vae, prompt, width, height, frame_count, *a, **k)
         img = _CURRENT["image"]
         if img is None:
             return cond, latent
-        caller = sys._getframe(1).f_locals
-        # clip loop of the main pass only (the refine pass has no 'source_meta'), clip 1, no CONTINUE video
-        if "source_meta" not in caller or caller.get("i") != 0 or caller.get("source_meta") is not None:
+        # find the Extender's own frame (other packs, e.g. H3 Director Board, may wrap this function on top of us)
+        f, caller = sys._getframe(1), None
+        while f is not None:
+            if norm(f.f_code.co_filename) == ext_file and f.f_code.co_name == "extend":
+                caller = f.f_locals
+                break
+            f = f.f_back
+        del f
+        # clip loop of the main pass only (the refine pass is another function), clip 1, no CONTINUE video
+        if caller is None or caller.get("i") != 0 or caller.get("source_meta") is not None:
+            _LOG.info("ClaudeFixes h3_start_image: not clip 1 of the main pass, start image not used here")
             return cond, latent
         frames = _resize_cover(img, width, height)
         kfs = list(cond[0][1].get("minimax_keyframes", []) or [])
